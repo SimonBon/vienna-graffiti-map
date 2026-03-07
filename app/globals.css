@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-neon: #39ff14;
+  --color-background: #0a0a0a;
+  --color-foreground: #ededed;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  background: #0a0a0a;
+  color: #ededed;
+}
+
+/* Graffiti marker styles */
+.graffiti-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid #39ff14;
+  border-radius: 50%;
+  font-size: 18px;
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.graffiti-marker:hover {
+  transform: scale(1.15);
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  background: #18181b !important;
+  border: 1px solid #3f3f46 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+  color: #e4e4e7 !important;
+}
+
+.leaflet-popup-tip {
+  background: #18181b !important;
+}
+
+.graffiti-popup-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.popup-emoji {
+  font-size: 22px;
+}
+
+.popup-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #39ff14;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.popup-desc {
+  font-size: 12px;
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.popup-img {
+  width: 100%;
+  border-radius: 6px;
+  margin-top: 4px;
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.popup-img-clickable {
+  cursor: zoom-in;
+  transition: opacity 0.15s;
+}
+
+.popup-img-clickable:hover {
+  opacity: 0.85;
+}
+
+/* Leaflet attribution dark */
+.leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: #71717a !important;
+}
+
+.leaflet-control-attribution a {
+  color: #a1a1aa !important;
 }
