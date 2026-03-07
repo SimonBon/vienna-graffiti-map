@@ -9,11 +9,12 @@ interface Props {
   onFilterChange: (cat: GraffitiCategory | null) => void;
   onEdit: (sighting: GraffitiSighting) => void;
   onManageCategories: () => void;
+  onAdminPanel: () => void;
   open: boolean;
   onToggle: () => void;
 }
 
-export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdit, onManageCategories, open, onToggle }: Props) {
+export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdit, onManageCategories, onAdminPanel, open, onToggle }: Props) {
   const { categories } = useCategoriesContext();
 
   const counts = Object.fromEntries(
@@ -26,7 +27,6 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
 
   return (
     <>
-      {/* Open button — fades out when sidebar is open */}
       <button
         onClick={onToggle}
         aria-label="Open sidebar"
@@ -38,7 +38,6 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
         <span>Sightings</span>
       </button>
 
-      {/* Mobile backdrop */}
       <div
         onClick={onToggle}
         className={`fixed inset-0 z-20 bg-black/20 transition-opacity duration-300 sm:hidden ${
@@ -46,7 +45,6 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
         }`}
       />
 
-      {/* Panel — slides in with translateX */}
       <div
         className={`fixed top-0 left-0 h-full w-72 z-20 flex flex-col bg-white border-r border-zinc-100 shadow-2xl transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : '-translate-x-full'
@@ -60,11 +58,8 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
               {sightings.length} sighting{sightings.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button
-            onClick={onToggle}
-            aria-label="Close sidebar"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
-          >
+          <button onClick={onToggle} aria-label="Close sidebar"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
             ✕
           </button>
         </div>
@@ -73,35 +68,25 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
         <div className="px-4 py-3 border-b border-zinc-100 shrink-0">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Filter</p>
-            <button
-              onClick={onManageCategories}
-              className="text-xs text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded px-1.5 py-0.5 transition-colors"
-            >
+            <button onClick={onManageCategories}
+              className="text-xs text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded px-1.5 py-0.5 transition-colors">
               Manage ›
             </button>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <button
-              onClick={() => onFilterChange(null)}
+            <button onClick={() => onFilterChange(null)}
               className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                activeFilter === null
-                  ? 'bg-zinc-900 text-white border-zinc-900'
-                  : 'border-zinc-200 text-zinc-500 hover:border-zinc-400'
-              }`}
-            >
+                activeFilter === null ? 'bg-zinc-900 text-white border-zinc-900' : 'border-zinc-200 text-zinc-500 hover:border-zinc-400'
+              }`}>
               All ({sightings.length})
             </button>
             {categories.map((cat) =>
               counts[cat.value] > 0 ? (
-                <button
-                  key={cat.value}
+                <button key={cat.value}
                   onClick={() => onFilterChange(activeFilter === cat.value ? null : cat.value)}
                   className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    activeFilter === cat.value
-                      ? 'bg-zinc-900 text-white border-zinc-900'
-                      : 'border-zinc-200 text-zinc-500 hover:border-zinc-400'
-                  }`}
-                >
+                    activeFilter === cat.value ? 'bg-zinc-900 text-white border-zinc-900' : 'border-zinc-200 text-zinc-500 hover:border-zinc-400'
+                  }`}>
                   {cat.emoji} {cat.label} ({counts[cat.value]})
                 </button>
               ) : null
@@ -131,13 +116,9 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-semibold text-zinc-700 uppercase tracking-wide">
-                          {cat.label}
-                        </span>
-                        <button
-                          onClick={() => onEdit(s)}
-                          className="opacity-0 group-hover:opacity-100 text-xs text-zinc-400 hover:text-zinc-700 border border-zinc-200 hover:border-zinc-400 rounded px-1.5 py-0.5 transition-all shrink-0"
-                        >
+                        <span className="text-xs font-semibold text-zinc-700 uppercase tracking-wide">{cat.label}</span>
+                        <button onClick={() => onEdit(s)}
+                          className="opacity-0 group-hover:opacity-100 text-xs text-zinc-400 hover:text-zinc-700 border border-zinc-200 hover:border-zinc-400 rounded px-1.5 py-0.5 transition-all shrink-0">
                           Edit
                         </button>
                       </div>
@@ -153,6 +134,15 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
               })}
             </ul>
           )}
+        </div>
+
+        {/* Admin button at bottom */}
+        <div className="px-4 py-3 border-t border-zinc-100 shrink-0">
+          <button onClick={onAdminPanel}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 transition-colors">
+            <span>🔒</span>
+            <span>Admin</span>
+          </button>
         </div>
       </div>
     </>

@@ -9,6 +9,7 @@ import SubmitModal from '@/components/submit/SubmitModal';
 import EditModal from '@/components/edit/EditModal';
 import Sidebar from '@/components/sidebar/Sidebar';
 import ManageCategoriesModal from '@/components/manage/ManageCategoriesModal';
+import AdminPanel from '@/components/admin/AdminPanel';
 import ImageLightbox from '@/components/map/ImageLightbox';
 
 interface Props {
@@ -20,6 +21,7 @@ function HomeInner({ initial }: Props) {
   const [pendingPin, setPendingPin] = useState<{ lat: number; lng: number } | null>(null);
   const [editingSighting, setEditingSighting] = useState<GraffitiSighting | null>(null);
   const [managingCategories, setManagingCategories] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -52,6 +54,7 @@ function HomeInner({ initial }: Props) {
         onFilterChange={setActiveFilter}
         onEdit={setEditingSighting}
         onManageCategories={() => setManagingCategories(true)}
+        onAdminPanel={() => setAdminOpen(true)}
         open={sidebarOpen}
         onToggle={() => setSidebarOpen((o) => !o)}
       />
@@ -64,7 +67,7 @@ function HomeInner({ initial }: Props) {
         <SubmitModal
           lat={pendingPin.lat}
           lng={pendingPin.lng}
-          onSuccess={() => { setPendingPin(null); showToast('📍 Pinned! Thanks for the sighting.'); }}
+          onSuccess={() => { setPendingPin(null); showToast('📍 Submitted! Waiting for approval.'); }}
           onClose={() => setPendingPin(null)}
         />
       )}
@@ -79,10 +82,11 @@ function HomeInner({ initial }: Props) {
       )}
 
       {managingCategories && (
-        <ManageCategoriesModal
-          sightings={sightings}
-          onClose={() => setManagingCategories(false)}
-        />
+        <ManageCategoriesModal sightings={sightings} onClose={() => setManagingCategories(false)} />
+      )}
+
+      {adminOpen && (
+        <AdminPanel onClose={() => setAdminOpen(false)} />
       )}
 
       {lightboxUrl && (

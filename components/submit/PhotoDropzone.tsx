@@ -50,11 +50,11 @@ export default function PhotoDropzone({ preview, onChange, onClear }: Props) {
 
   return (
     <>
+      {/* No capture attribute — lets user choose camera or photo library */}
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleInputChange}
         className="hidden"
       />
