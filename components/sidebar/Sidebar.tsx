@@ -28,10 +28,11 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
 
   return (
     <>
+      {/* Desktop toggle — top-left, hidden on mobile */}
       <button
         onClick={onToggle}
         aria-label="Open sidebar"
-        className={`fixed top-4 left-4 z-30 flex items-center gap-2 bg-white border border-zinc-200 shadow-md rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all duration-300 ${
+        className={`hidden sm:flex fixed top-4 left-4 z-30 items-center gap-2 bg-white border border-zinc-200 shadow-md rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-all duration-300 ${
           open ? 'opacity-0 pointer-events-none -translate-x-2' : 'opacity-100 translate-x-0'
         }`}
       >
@@ -39,6 +40,19 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
         <span>Sightings</span>
       </button>
 
+      {/* Mobile toggle — bottom pill, hidden on desktop */}
+      <button
+        onClick={onToggle}
+        aria-label="Open sightings"
+        className={`sm:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white border border-zinc-200 shadow-lg rounded-full px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-all duration-300 ${
+          open ? 'opacity-0 pointer-events-none translate-y-4' : 'opacity-100 translate-y-0'
+        }`}
+      >
+        <span>🎨</span>
+        <span>{sightings.length} Sightings</span>
+      </button>
+
+      {/* Backdrop (mobile only) */}
       <div
         onClick={onToggle}
         className={`fixed inset-0 z-20 bg-black/20 transition-opacity duration-300 sm:hidden ${
@@ -46,20 +60,28 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
         }`}
       />
 
+      {/* Panel — bottom sheet on mobile, left sidebar on desktop */}
       <div
-        className={`fixed top-0 left-0 h-full w-72 z-20 flex flex-col bg-white border-r border-zinc-100 shadow-2xl transition-transform duration-300 ease-in-out ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed z-20 flex flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out
+          bottom-0 left-0 right-0 h-[68vh] rounded-t-2xl border-t border-zinc-100
+          sm:top-0 sm:bottom-auto sm:right-auto sm:h-full sm:w-72 sm:rounded-none sm:border-r sm:border-t-0
+          ${open ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:-translate-x-full sm:translate-y-0'}
+        `}
       >
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
+          <div className="w-9 h-1 rounded-full bg-zinc-300" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-5 pb-4 border-b border-zinc-100 shrink-0">
+        <div className="flex items-center justify-between px-4 pt-3 pb-4 sm:pt-5 border-b border-zinc-100 shrink-0">
           <div>
             <h1 className="font-bold text-zinc-900 text-base tracking-tight">🎨 Vienna Graffiti</h1>
             <p className="text-xs text-zinc-400 mt-0.5">
               {sightings.length} sighting{sightings.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button onClick={onToggle} aria-label="Close sidebar"
+          <button onClick={onToggle} aria-label="Close"
             className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
             ✕
           </button>
@@ -99,7 +121,7 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
         <div className="flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
             <p className="text-sm text-zinc-400 text-center mt-8 px-4">
-              No sightings yet.<br />Tap the map to add one!
+              No sightings yet.<br />Hold the map to add one!
             </p>
           ) : (
             <ul className="divide-y divide-zinc-100">
@@ -109,7 +131,7 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
                   <li
                     key={s.id}
                     onClick={() => onSelect(s)}
-                    className="group flex gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors cursor-pointer"
+                    className="group flex gap-3 px-4 py-3 hover:bg-zinc-50 active:bg-zinc-50 transition-colors cursor-pointer"
                   >
                     {s.image_url ? (
                       <img src={s.image_url} alt={cat.label}
@@ -124,7 +146,7 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
                         <span className="text-xs font-semibold text-zinc-700 uppercase tracking-wide">{cat.label}</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); onEdit(s); }}
-                          className="opacity-0 group-hover:opacity-100 text-xs text-zinc-400 hover:text-zinc-700 border border-zinc-200 hover:border-zinc-400 rounded px-1.5 py-0.5 transition-all shrink-0">
+                          className="sm:opacity-0 sm:group-hover:opacity-100 text-xs text-zinc-400 hover:text-zinc-700 border border-zinc-200 hover:border-zinc-400 rounded px-1.5 py-0.5 transition-all shrink-0">
                           Edit
                         </button>
                       </div>

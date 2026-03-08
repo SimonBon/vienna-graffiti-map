@@ -25,7 +25,7 @@ function HomeInner({ initial }: Props) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<GraffitiCategory | null>(null);
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
