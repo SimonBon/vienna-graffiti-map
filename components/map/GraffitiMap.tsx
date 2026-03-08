@@ -100,7 +100,7 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
       </MapContainer>
 
       {/* Bottom-left controls — shift right on desktop when sidebar open, up on mobile when sheet open */}
-      <div className={`absolute z-[400] flex flex-col gap-1.5 transition-all duration-300 ease-in-out
+      <div className={`absolute z-[400] flex flex-row gap-1.5 transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'bottom-[72vh] sm:bottom-8 left-2.5 sm:left-[19rem]' : 'bottom-8 left-2.5'}
       `}>
         {/* Use my location */}
