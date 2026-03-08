@@ -24,6 +24,8 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function handlePhotoChange(file: File) {
@@ -73,25 +75,30 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
 
   async function handleDelete() {
     setDeleting(true);
-    setError(null);
-    try {
-      const { data, error: deleteError } = await createClient()
-        .from('graffiti_sightings')
-        .delete()
-        .eq('id', sighting.id)
-        .select();
-      if (deleteError) throw new Error(deleteError.message);
-      if (!data || data.length === 0) {
-        throw new Error(
-          'Delete was blocked by Supabase. Go to the SQL Editor and run:\n\ncreate policy "Public delete" on public.graffiti_sightings for delete using (true);'
-        );
-      }
-      onDelete(sighting.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
+    setDeleteError(null);
+    const res = await fetch('/api/admin/delete', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-admin-password': deletePassword },
+      body: JSON.stringify({ id: sighting.id }),
+    });
+    if (res.status === 401) {
+      setDeleteError('Wrong password');
       setDeleting(false);
-      setConfirmDelete(false);
+      return;
     }
+    if (!res.ok) {
+      setDeleteError('Delete failed');
+      setDeleting(false);
+      return;
+    }
+    sessionStorage.setItem('admin_pw', deletePassword);
+    onDelete(sighting.id);
+  }
+
+  function handleShowDelete() {
+    setDeletePassword(sessionStorage.getItem('admin_pw') ?? '');
+    setDeleteError(null);
+    setConfirmDelete(true);
   }
 
   return (
@@ -160,20 +167,28 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
         {confirmDelete ? (
           <div className="rounded-xl border border-red-100 bg-red-50 p-3 space-y-3">
             <p className="text-sm font-medium text-red-700 text-center">Delete this sighting?</p>
-            <p className="text-xs text-red-400 text-center">This cannot be undone.</p>
+            <input
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Admin password"
+              autoFocus
+              className="w-full border border-red-200 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400 placeholder-red-300"
+            />
+            {deleteError && <p className="text-red-500 text-xs text-center">{deleteError}</p>}
             <div className="flex gap-2">
               <button type="button" onClick={() => setConfirmDelete(false)}
                 className="flex-1 py-2 rounded-lg border border-zinc-200 bg-white text-sm text-zinc-600 hover:bg-zinc-50 transition-colors font-medium">
                 No, keep it
               </button>
-              <button type="button" onClick={handleDelete} disabled={deleting}
+              <button type="button" onClick={handleDelete} disabled={deleting || !deletePassword}
                 className="flex-1 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-sm text-white font-semibold transition-colors disabled:opacity-50">
                 {deleting ? 'Deleting…' : 'Yes, delete'}
               </button>
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setConfirmDelete(true)}
+          <button type="button" onClick={handleShowDelete}
             className="w-full py-2 text-sm text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
             Delete sighting
           </button>
