@@ -2,7 +2,7 @@
 
 import 'leaflet/dist/leaflet.css';
 import { useState } from 'react';
-import { MapContainer, TileLayer, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet';
 import { GraffitiSighting } from '@/types';
 import { VIENNA_CENTER, DEFAULT_ZOOM, MIN_ZOOM } from '@/lib/constants/map';
 import GraffitiMarker from './GraffitiMarker';
@@ -35,10 +35,41 @@ interface Props {
   flyTarget: { lat: number; lng: number } | null;
 }
 
+function FlyToLocation({ target }: { target: [number, number] | null }) {
+  const map = useMap();
+  if (target) map.flyTo(target, Math.max(map.getZoom(), 17), { animate: true, duration: 0.8 });
+  return null;
+}
+
 export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTarget }: Props) {
   const [layer, setLayer] = useState<LayerKey>('map');
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+  const [locTarget, setLocTarget] = useState<[number, number] | null>(null);
+
   const current = LAYERS[layer];
   const next: LayerKey = layer === 'map' ? 'satellite' : 'map';
+
+  function handleLocate() {
+    if (!navigator.geolocation) { setLocError('Not supported'); return; }
+    setLocating(true);
+    setLocError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setLocating(false);
+        setLocTarget([latitude, longitude]);
+        setTimeout(() => setLocTarget(null), 100);
+        onMapClick(latitude, longitude);
+      },
+      () => {
+        setLocating(false);
+        setLocError('Location denied');
+        setTimeout(() => setLocError(null), 3000);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
 
   return (
     <div className="relative h-full w-full">
@@ -61,20 +92,42 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
         <ZoomControl position="bottomright" />
         <MapClickHandler onMapClick={onMapClick} />
         <MapFlyTo target={flyTarget} />
+        <FlyToLocation target={locTarget} />
         {sightings.map((s) => (
           <GraffitiMarker key={s.id} sighting={s} onImageClick={onImageClick} />
         ))}
       </MapContainer>
 
-      {/* Layer toggle button */}
-      <button
-        onClick={() => setLayer(next)}
-        title={current.title}
-        className="absolute bottom-8 left-2.5 z-[400] flex items-center gap-1.5 bg-white border border-zinc-200 shadow-md rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
-      >
-        <span className="text-sm">{LAYERS[next].label}</span>
-        <span className="hidden sm:inline">{layer === 'map' ? 'Satellite' : 'Map'}</span>
-      </button>
+      {/* Bottom-left controls */}
+      <div className="absolute bottom-8 left-2.5 z-[400] flex flex-col gap-1.5">
+        {/* Use my location */}
+        <button
+          onClick={handleLocate}
+          disabled={locating}
+          title="Pin my current location"
+          className="flex items-center gap-1.5 bg-white border border-zinc-200 shadow-md rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-60"
+        >
+          <span className="text-sm">{locating ? '⏳' : '📍'}</span>
+          <span className="hidden sm:inline">{locating ? 'Locating…' : 'Pin my location'}</span>
+        </button>
+
+        {/* Layer toggle */}
+        <button
+          onClick={() => setLayer(next)}
+          title={current.title}
+          className="flex items-center gap-1.5 bg-white border border-zinc-200 shadow-md rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+        >
+          <span className="text-sm">{LAYERS[next].label}</span>
+          <span className="hidden sm:inline">{layer === 'map' ? 'Satellite' : 'Map'}</span>
+        </button>
+      </div>
+
+      {/* Location error toast */}
+      {locError && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[400] bg-zinc-900 text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-lg">
+          {locError}
+        </div>
+      )}
     </div>
   );
 }
