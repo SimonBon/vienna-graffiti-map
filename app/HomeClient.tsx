@@ -52,7 +52,7 @@ function HomeInner({ initial }: Props) {
     : sightings;
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden">
+    <div className="relative h-dvh w-screen overflow-hidden">
       <MapWrapper
         sightings={visibleSightings}
         onMapClick={handleMapClick}

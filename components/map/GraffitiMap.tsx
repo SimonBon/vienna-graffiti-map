@@ -1,7 +1,7 @@
 'use client';
 
 import 'leaflet/dist/leaflet.css';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet';
 import { GraffitiSighting } from '@/types';
 import { VIENNA_CENTER, DEFAULT_ZOOM, MIN_ZOOM } from '@/lib/constants/map';
@@ -47,6 +47,22 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
   const [locTarget, setLocTarget] = useState<[number, number] | null>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
+
+  // Prevent touch events on the controls from leaking into Leaflet
+  useEffect(() => {
+    const el = controlsRef.current;
+    if (!el) return;
+    const stop = (e: Event) => e.stopPropagation();
+    el.addEventListener('touchstart', stop, { capture: true, passive: true });
+    el.addEventListener('touchmove', stop, { capture: true, passive: true });
+    el.addEventListener('touchend', stop, { capture: true });
+    return () => {
+      el.removeEventListener('touchstart', stop, { capture: true });
+      el.removeEventListener('touchmove', stop, { capture: true });
+      el.removeEventListener('touchend', stop, { capture: true });
+    };
+  }, []);
 
   const current = LAYERS[layer];
   const next: LayerKey = layer === 'map' ? 'satellite' : 'map';
@@ -100,7 +116,7 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
       </MapContainer>
 
       {/* Bottom-left controls — shift right on desktop when sidebar open, up on mobile when sheet open */}
-      <div className={`absolute z-[400] flex flex-row gap-1.5 transition-all duration-300 ease-in-out
+      <div ref={controlsRef} className={`absolute z-[400] flex flex-row gap-1.5 transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'bottom-[72vh] sm:bottom-8 left-2.5 sm:left-[19rem]' : 'bottom-8 left-2.5'}
       `}>
         {/* Use my location */}
