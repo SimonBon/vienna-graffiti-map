@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { GraffitiSighting, GraffitiCategory } from '@/types';
 import { useCategoriesContext } from '@/contexts/CategoriesContext';
 
@@ -15,8 +16,64 @@ interface Props {
   onToggle: () => void;
 }
 
+const DISMISS_THRESHOLD = 120; // px dragged down before auto-close
+
 export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdit, onSelect, onManageCategories, onAdminPanel, open, onToggle }: Props) {
   const { categories } = useCategoriesContext();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startY = useRef(0);
+  const currentDY = useRef(0);
+  const onToggleRef = useRef(onToggle);
+  useEffect(() => { onToggleRef.current = onToggle; });
+
+  // Window-level touch handlers for drag tracking
+  useEffect(() => {
+    function onTouchMove(e: TouchEvent) {
+      if (!isDragging.current || !panelRef.current) return;
+      const dy = Math.max(0, e.touches[0].clientY - startY.current);
+      currentDY.current = dy;
+      panelRef.current.style.transform = `translateY(${dy}px)`;
+    }
+
+    function onTouchEnd() {
+      if (!isDragging.current || !panelRef.current) return;
+      isDragging.current = false;
+      const dy = currentDY.current;
+      currentDY.current = 0;
+
+      if (dy > DISMISS_THRESHOLD) {
+        // Let CSS class handle the close animation
+        panelRef.current.style.transform = '';
+        panelRef.current.style.transition = '';
+        onToggleRef.current();
+      } else {
+        // Snap back
+        panelRef.current.style.transition = 'transform 280ms ease-out';
+        panelRef.current.style.transform = 'translateY(0)';
+        const el = panelRef.current;
+        setTimeout(() => {
+          el.style.transform = '';
+          el.style.transition = '';
+        }, 280);
+      }
+    }
+
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []);
+
+  function onDragHandleTouchStart(e: React.TouchEvent) {
+    if (!panelRef.current) return;
+    isDragging.current = true;
+    startY.current = e.touches[0].clientY;
+    currentDY.current = 0;
+    panelRef.current.style.transition = 'none';
+  }
 
   const counts = Object.fromEntries(
     categories.map((cat) => [cat.value, sightings.filter((s) => s.category === cat.value).length])
@@ -62,29 +119,33 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
 
       {/* Panel — bottom sheet on mobile, left sidebar on desktop */}
       <div
+        ref={panelRef}
         className={`fixed z-20 flex flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out
           bottom-0 left-0 right-0 h-[68vh] rounded-t-2xl border-t border-zinc-100
           sm:top-0 sm:bottom-auto sm:right-auto sm:h-full sm:w-72 sm:rounded-none sm:border-r sm:border-t-0
           ${open ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:-translate-x-full sm:translate-y-0'}
         `}
       >
-        {/* Mobile drag handle */}
-        <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
-          <div className="w-9 h-1 rounded-full bg-zinc-300" />
-        </div>
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-3 pb-4 sm:pt-5 border-b border-zinc-100 shrink-0">
-          <div>
-            <h1 className="font-bold text-zinc-900 text-base tracking-tight">🎨 Vienna Graffiti</h1>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              {sightings.length} sighting{sightings.length !== 1 ? 's' : ''}
-            </p>
+        {/* Drag zone — handle + header, mobile only interaction */}
+        <div onTouchStart={onDragHandleTouchStart} className="shrink-0 touch-none">
+          {/* Visual drag handle */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden">
+            <div className="w-10 h-1 rounded-full bg-zinc-300" />
           </div>
-          <button onClick={onToggle} aria-label="Close"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
-            ✕
-          </button>
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-4 sm:pt-5 border-b border-zinc-100">
+            <div>
+              <h1 className="font-bold text-zinc-900 text-base tracking-tight">🎨 Vienna Graffiti</h1>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                {sightings.length} sighting{sightings.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <button onClick={onToggle} aria-label="Close"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors">
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Category filter */}
