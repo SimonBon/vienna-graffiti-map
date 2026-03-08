@@ -62,10 +62,12 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
         .from('graffiti_sightings')
         .update({ category, description: description.trim() || null, image_url })
         .eq('id', sighting.id)
-        .select()
-        .single();
+        .select();
       if (updateError) throw new Error(updateError.message);
-      onSuccess(data as GraffitiSighting);
+      if (!data || data.length === 0) {
+        throw new Error('Update was blocked by the database. Run this in the Supabase SQL editor:\n\ncreate policy "Public update" on public.graffiti_sightings for update using (true) with check (true);');
+      }
+      onSuccess(data[0] as GraffitiSighting);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
