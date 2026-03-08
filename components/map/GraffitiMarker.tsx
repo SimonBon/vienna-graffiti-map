@@ -34,6 +34,9 @@ export default function GraffitiMarker({ sighting, onImageClick }: Props) {
           {sighting.description && (
             <p className="popup-desc">{sighting.description}</p>
           )}
+          {sighting.submitted_by && (
+            <p className="popup-by">by {sighting.submitted_by}</p>
+          )}
           {sighting.image_url && (
             <img
               src={sighting.image_url}

@@ -7,6 +7,8 @@ import { useCategoriesContext } from '@/contexts/CategoriesContext';
 import { GraffitiCategory } from '@/types';
 import PhotoDropzone from './PhotoDropzone';
 
+const NAME_KEY = 'graffiti_submitted_by';
+
 interface Props {
   lat: number;
   lng: number;
@@ -18,6 +20,7 @@ export default function SubmitForm({ lat, lng, onSuccess, onCancel }: Props) {
   const { categories } = useCategoriesContext();
   const [category, setCategory] = useState<GraffitiCategory>('tag');
   const [description, setDescription] = useState('');
+  const [submittedBy, setSubmittedBy] = useState(() => localStorage.getItem(NAME_KEY) ?? '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,6 +36,9 @@ export default function SubmitForm({ lat, lng, onSuccess, onCancel }: Props) {
     setLoading(true);
     setError(null);
     try {
+      const name = submittedBy.trim();
+      if (name) localStorage.setItem(NAME_KEY, name);
+
       const supabase = createClient();
       let image_url: string | null = null;
       if (imageFile) {
@@ -46,7 +52,7 @@ export default function SubmitForm({ lat, lng, onSuccess, onCancel }: Props) {
       }
       const { error: insertError } = await supabase
         .from('graffiti_sightings')
-        .insert({ lat, lng, category, description: description.trim() || null, image_url });
+        .insert({ lat, lng, category, description: description.trim() || null, image_url, submitted_by: name || null });
       if (insertError) throw new Error(insertError.message);
       onSuccess();
     } catch (err) {
@@ -67,21 +73,27 @@ export default function SubmitForm({ lat, lng, onSuccess, onCancel }: Props) {
         <label className="block text-sm font-medium text-zinc-700 mb-1">Category</label>
         <div className="grid grid-cols-3 gap-2">
           {categories.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => setCategory(cat.value)}
+            <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
               className={`flex items-center gap-1.5 px-2 py-1.5 rounded border text-sm transition-colors ${
-                category === cat.value
-                  ? 'border-zinc-900 bg-zinc-900 text-white'
-                  : 'border-zinc-200 text-zinc-600 hover:border-zinc-400'
-              }`}
-            >
+                category === cat.value ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-200 text-zinc-600 hover:border-zinc-400'
+              }`}>
               <span>{cat.emoji}</span>
               <span>{cat.label}</span>
             </button>
           ))}
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-zinc-700 mb-1">
+          Your name <span className="text-zinc-400">(optional)</span>
+        </label>
+        <input
+          value={submittedBy}
+          onChange={(e) => setSubmittedBy(e.target.value)}
+          placeholder="Anonymous"
+          className="w-full bg-white border border-zinc-200 rounded px-3 py-2 text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-500"
+        />
       </div>
 
       <div>
@@ -101,11 +113,7 @@ export default function SubmitForm({ lat, lng, onSuccess, onCancel }: Props) {
         <label className="block text-sm font-medium text-zinc-700 mb-1">
           Photo <span className="text-zinc-400">(optional)</span>
         </label>
-        <PhotoDropzone
-          preview={preview}
-          onChange={handlePhotoChange}
-          onClear={() => { setImageFile(null); setPreview(null); }}
-        />
+        <PhotoDropzone preview={preview} onChange={handlePhotoChange} onClear={() => { setImageFile(null); setPreview(null); }} />
       </div>
 
       {error && <p className="text-red-500 text-sm bg-red-50 border border-red-100 rounded px-3 py-2">{error}</p>}

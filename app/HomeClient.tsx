@@ -23,6 +23,7 @@ function HomeInner({ initial }: Props) {
   const [managingCategories, setManagingCategories] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeFilter, setActiveFilter] = useState<GraffitiCategory | null>(null);
@@ -36,6 +37,12 @@ function HomeInner({ initial }: Props) {
     setTimeout(() => setToast(null), 3000);
   }
 
+  function handleSelectSighting(s: GraffitiSighting) {
+    setFlyTarget({ lat: Number(s.lat), lng: Number(s.lng) });
+    // Reset after a tick so the same entry can be clicked again
+    setTimeout(() => setFlyTarget(null), 100);
+  }
+
   const visibleSightings = activeFilter
     ? sightings.filter((s) => s.category === activeFilter)
     : sightings;
@@ -46,6 +53,7 @@ function HomeInner({ initial }: Props) {
         sightings={visibleSightings}
         onMapClick={handleMapClick}
         onImageClick={setLightboxUrl}
+        flyTarget={flyTarget}
       />
 
       <Sidebar
@@ -53,6 +61,7 @@ function HomeInner({ initial }: Props) {
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         onEdit={setEditingSighting}
+        onSelect={handleSelectSighting}
         onManageCategories={() => setManagingCategories(true)}
         onAdminPanel={() => setAdminOpen(true)}
         open={sidebarOpen}

@@ -8,13 +8,14 @@ interface Props {
   activeFilter: GraffitiCategory | null;
   onFilterChange: (cat: GraffitiCategory | null) => void;
   onEdit: (sighting: GraffitiSighting) => void;
+  onSelect: (sighting: GraffitiSighting) => void;
   onManageCategories: () => void;
   onAdminPanel: () => void;
   open: boolean;
   onToggle: () => void;
 }
 
-export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdit, onManageCategories, onAdminPanel, open, onToggle }: Props) {
+export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdit, onSelect, onManageCategories, onAdminPanel, open, onToggle }: Props) {
   const { categories } = useCategoriesContext();
 
   const counts = Object.fromEntries(
@@ -105,7 +106,11 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
               {filtered.map((s) => {
                 const cat = categories.find((c) => c.value === s.category) ?? { emoji: '❓', label: s.category, value: s.category };
                 return (
-                  <li key={s.id} className="group flex gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors">
+                  <li
+                    key={s.id}
+                    onClick={() => onSelect(s)}
+                    className="group flex gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors cursor-pointer"
+                  >
                     {s.image_url ? (
                       <img src={s.image_url} alt={cat.label}
                         className="w-12 h-12 rounded-lg object-cover shrink-0 border border-zinc-100" />
@@ -117,7 +122,8 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
                         <span className="text-xs font-semibold text-zinc-700 uppercase tracking-wide">{cat.label}</span>
-                        <button onClick={() => onEdit(s)}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onEdit(s); }}
                           className="opacity-0 group-hover:opacity-100 text-xs text-zinc-400 hover:text-zinc-700 border border-zinc-200 hover:border-zinc-400 rounded px-1.5 py-0.5 transition-all shrink-0">
                           Edit
                         </button>
@@ -125,9 +131,14 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
                       {s.description && (
                         <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{s.description}</p>
                       )}
-                      <p className="text-xs text-zinc-300 mt-1">
-                        {new Date(s.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-zinc-300">
+                          {new Date(s.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        </p>
+                        {s.submitted_by && (
+                          <p className="text-xs text-zinc-400">· {s.submitted_by}</p>
+                        )}
+                      </div>
                     </div>
                   </li>
                 );
@@ -136,7 +147,7 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
           )}
         </div>
 
-        {/* Admin button at bottom */}
+        {/* Admin button */}
         <div className="px-4 py-3 border-t border-zinc-100 shrink-0">
           <button onClick={onAdminPanel}
             className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 transition-colors">

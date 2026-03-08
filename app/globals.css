@@ -13,7 +13,6 @@ body {
   color: #ededed;
 }
 
-/* Graffiti marker styles */
 .graffiti-marker {
   display: flex;
   align-items: center;
@@ -33,7 +32,6 @@ body {
   transform: scale(1.15);
 }
 
-/* Leaflet popup overrides */
 .leaflet-popup-content-wrapper {
   background: #18181b !important;
   border: 1px solid #3f3f46 !important;
@@ -71,6 +69,12 @@ body {
   margin: 0;
 }
 
+.popup-by {
+  font-size: 11px;
+  color: #71717a;
+  margin: 0;
+}
+
 .popup-img {
   width: 100%;
   border-radius: 6px;
@@ -88,7 +92,6 @@ body {
   opacity: 0.85;
 }
 
-/* Leaflet attribution dark */
 .leaflet-control-attribution {
   background: rgba(0, 0, 0, 0.6) !important;
   color: #71717a !important;

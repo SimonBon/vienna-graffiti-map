@@ -6,14 +6,16 @@ import { GraffitiSighting } from '@/types';
 import { VIENNA_CENTER, DEFAULT_ZOOM, MIN_ZOOM } from '@/lib/constants/map';
 import GraffitiMarker from './GraffitiMarker';
 import MapClickHandler from './MapClickHandler';
+import MapFlyTo from './MapFlyTo';
 
 interface Props {
   sightings: GraffitiSighting[];
   onMapClick: (lat: number, lng: number) => void;
   onImageClick: (url: string) => void;
+  flyTarget: { lat: number; lng: number } | null;
 }
 
-export default function GraffitiMap({ sightings, onMapClick, onImageClick }: Props) {
+export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTarget }: Props) {
   return (
     <MapContainer
       center={VIENNA_CENTER}
@@ -32,6 +34,7 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick }: Pro
       />
       <ZoomControl position="bottomright" />
       <MapClickHandler onMapClick={onMapClick} />
+      <MapFlyTo target={flyTarget} />
       {sightings.map((s) => (
         <GraffitiMarker key={s.id} sighting={s} onImageClick={onImageClick} />
       ))}
