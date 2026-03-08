@@ -17,7 +17,7 @@ interface Props {
 }
 
 function HomeInner({ initial }: Props) {
-  const { sightings, updateSighting, deleteSighting } = useSightings(initial);
+  const { sightings, updateSighting, deleteSighting, addSighting } = useSightings(initial);
   const [pendingPin, setPendingPin] = useState<{ lat: number; lng: number } | null>(null);
   const [editingSighting, setEditingSighting] = useState<GraffitiSighting | null>(null);
   const [managingCategories, setManagingCategories] = useState(false);
@@ -39,8 +39,12 @@ function HomeInner({ initial }: Props) {
 
   function handleSelectSighting(s: GraffitiSighting) {
     setFlyTarget({ lat: Number(s.lat), lng: Number(s.lng) });
-    // Reset after a tick so the same entry can be clicked again
     setTimeout(() => setFlyTarget(null), 100);
+  }
+
+  function handleApprove(sighting: GraffitiSighting) {
+    addSighting(sighting);
+    showToast('✅ Sighting approved and live on the map.');
   }
 
   const visibleSightings = activeFilter
@@ -95,7 +99,10 @@ function HomeInner({ initial }: Props) {
       )}
 
       {adminOpen && (
-        <AdminPanel onClose={() => setAdminOpen(false)} />
+        <AdminPanel
+          onApprove={handleApprove}
+          onClose={() => setAdminOpen(false)}
+        />
       )}
 
       {lightboxUrl && (

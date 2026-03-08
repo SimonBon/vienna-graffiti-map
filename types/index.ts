@@ -9,6 +9,7 @@ export interface GraffitiSighting {
   description: string | null;
   image_url: string | null;
   submitted_by: string | null;
+  status: string;
 }
 
 export interface CategoryDef {

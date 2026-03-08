@@ -11,12 +11,21 @@ export function useSightings(initial: GraffitiSighting[]) {
     const supabase = createClient();
 
     const channel = supabase
-      .channel('graffiti_sightings_inserts')
+      .channel('graffiti_sightings_changes')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'graffiti_sightings' },
+        { event: 'UPDATE', schema: 'public', table: 'graffiti_sightings' },
         (payload) => {
-          setSightings((prev) => [payload.new as GraffitiSighting, ...prev]);
+          const row = payload.new as GraffitiSighting;
+          if (row.status === 'approved') {
+            setSightings((prev) =>
+              prev.find((s) => s.id === row.id)
+                ? prev.map((s) => (s.id === row.id ? row : s))
+                : [row, ...prev]
+            );
+          } else {
+            setSightings((prev) => prev.filter((s) => s.id !== row.id));
+          }
         }
       )
       .subscribe();
@@ -26,6 +35,12 @@ export function useSightings(initial: GraffitiSighting[]) {
     };
   }, []);
 
+  function addSighting(sighting: GraffitiSighting) {
+    setSightings((prev) =>
+      prev.find((s) => s.id === sighting.id) ? prev : [sighting, ...prev]
+    );
+  }
+
   function updateSighting(updated: GraffitiSighting) {
     setSightings((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
   }
@@ -34,5 +49,5 @@ export function useSightings(initial: GraffitiSighting[]) {
     setSightings((prev) => prev.filter((s) => s.id !== id));
   }
 
-  return { sightings, setSightings, updateSighting, deleteSighting };
+  return { sightings, setSightings, addSighting, updateSighting, deleteSighting };
 }

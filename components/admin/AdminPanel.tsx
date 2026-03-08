@@ -7,10 +7,11 @@ import { useCategoriesContext } from '@/contexts/CategoriesContext';
 const SESSION_KEY = 'admin_pw';
 
 interface Props {
+  onApprove: (sighting: GraffitiSighting) => void;
   onClose: () => void;
 }
 
-export default function AdminPanel({ onClose }: Props) {
+export default function AdminPanel({ onApprove, onClose }: Props) {
   const { categoryMap } = useCategoriesContext();
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(() => !!sessionStorage.getItem(SESSION_KEY));
@@ -57,12 +58,16 @@ export default function AdminPanel({ onClose }: Props) {
   async function handleApprove(id: string) {
     setActionId(id);
     const pw = sessionStorage.getItem(SESSION_KEY)!;
-    await fetch('/api/admin/approve', {
+    const res = await fetch('/api/admin/approve', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-admin-password': pw },
       body: JSON.stringify({ id }),
     });
-    setPending((prev) => prev.filter((s) => s.id !== id));
+    if (res.ok) {
+      const sighting = pending.find((s) => s.id === id);
+      if (sighting) onApprove({ ...sighting, status: 'approved' });
+      setPending((prev) => prev.filter((s) => s.id !== id));
+    }
     setActionId(null);
   }
 
@@ -84,7 +89,6 @@ export default function AdminPanel({ onClose }: Props) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="w-full sm:max-w-lg bg-white border border-zinc-200 rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-zinc-100 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-zinc-900">Admin Panel</h2>
@@ -131,20 +135,18 @@ export default function AdminPanel({ onClose }: Props) {
                 return (
                   <li key={s.id} className="border border-zinc-100 rounded-xl overflow-hidden">
                     {s.image_url && (
-                      <img src={s.image_url} alt={cat.label}
-                        className="w-full h-40 object-cover" />
+                      <img src={s.image_url} alt={cat.label} className="w-full h-40 object-cover" />
                     )}
                     <div className="p-3 space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{cat.emoji}</span>
                         <span className="text-sm font-semibold text-zinc-800">{cat.label}</span>
+                        {s.submitted_by && <span className="text-xs text-zinc-400">by {s.submitted_by}</span>}
                         <span className="ml-auto text-xs text-zinc-400 font-mono">
                           {Number(s.lat).toFixed(4)}, {Number(s.lng).toFixed(4)}
                         </span>
                       </div>
-                      {s.description && (
-                        <p className="text-xs text-zinc-500">{s.description}</p>
-                      )}
+                      {s.description && <p className="text-xs text-zinc-500">{s.description}</p>}
                       <p className="text-xs text-zinc-300">
                         {new Date(s.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </p>
