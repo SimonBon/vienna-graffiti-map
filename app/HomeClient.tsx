@@ -73,7 +73,7 @@ function HomeInner({ initial }: Props) {
       />
 
       <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-500 shadow-sm pointer-events-none">
-        Click map to pin a sighting
+        Right-click to pin · Hold on mobile
       </div>
 
       {pendingPin && (
