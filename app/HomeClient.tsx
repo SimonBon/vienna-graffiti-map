@@ -58,6 +58,7 @@ function HomeInner({ initial }: Props) {
         onMapClick={handleMapClick}
         onImageClick={setLightboxUrl}
         flyTarget={flyTarget}
+        sidebarOpen={sidebarOpen}
       />
 
       <Sidebar

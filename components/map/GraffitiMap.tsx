@@ -33,6 +33,7 @@ interface Props {
   onMapClick: (lat: number, lng: number) => void;
   onImageClick: (url: string) => void;
   flyTarget: { lat: number; lng: number } | null;
+  sidebarOpen: boolean;
 }
 
 function FlyToLocation({ target }: { target: [number, number] | null }) {
@@ -41,7 +42,7 @@ function FlyToLocation({ target }: { target: [number, number] | null }) {
   return null;
 }
 
-export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTarget }: Props) {
+export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTarget, sidebarOpen }: Props) {
   const [layer, setLayer] = useState<LayerKey>('map');
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
@@ -98,8 +99,10 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
         ))}
       </MapContainer>
 
-      {/* Bottom-left controls */}
-      <div className="absolute bottom-8 left-2.5 z-[400] flex flex-col gap-1.5">
+      {/* Bottom-left controls — shift right on desktop when sidebar open, up on mobile when sheet open */}
+      <div className={`absolute z-[400] flex flex-col gap-1.5 transition-all duration-300 ease-in-out
+        ${sidebarOpen ? 'bottom-[72vh] sm:bottom-8 left-2.5 sm:left-[19rem]' : 'bottom-8 left-2.5'}
+      `}>
         {/* Use my location */}
         <button
           onClick={handleLocate}

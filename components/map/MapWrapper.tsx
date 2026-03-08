@@ -10,9 +10,10 @@ interface Props {
   onMapClick: (lat: number, lng: number) => void;
   onImageClick: (url: string) => void;
   flyTarget: { lat: number; lng: number } | null;
+  sidebarOpen: boolean;
 }
 
-export default function MapWrapper({ sightings, onMapClick, onImageClick, flyTarget }: Props) {
+export default function MapWrapper({ sightings, onMapClick, onImageClick, flyTarget, sidebarOpen }: Props) {
   return (
     <div className="h-full w-full">
       <GraffitiMap
@@ -20,6 +21,7 @@ export default function MapWrapper({ sightings, onMapClick, onImageClick, flyTar
         onMapClick={onMapClick}
         onImageClick={onImageClick}
         flyTarget={flyTarget}
+        sidebarOpen={sidebarOpen}
       />
     </div>
   );
