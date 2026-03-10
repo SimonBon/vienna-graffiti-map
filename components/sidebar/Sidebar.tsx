@@ -190,12 +190,12 @@ export default function Sidebar({ sightings, activeFilter, onFilterChange, onEdi
               {detail.image_url && (
                 <button
                   onClick={() => onImageClick(detail.image_url!)}
-                  className="block w-full"
+                  className="block w-full bg-zinc-100"
                 >
                   <img
                     src={detail.image_url}
                     alt="Graffiti"
-                    className="w-full h-48 object-cover"
+                    className="w-full max-h-64 object-contain"
                   />
                 </button>
               )}
