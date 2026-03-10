@@ -21,6 +21,7 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(sighting.image_url ?? null);
   const [clearImage, setClearImage] = useState(false);
+  const [editPassword, setEditPassword] = useState(() => sessionStorage.getItem('admin_pw') ?? '');
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -42,6 +43,10 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!editPassword) {
+      setError('Admin password required to save changes.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -58,16 +63,21 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
       } else if (clearImage) {
         image_url = null;
       }
-      const { data, error: updateError } = await supabase
-        .from('graffiti_sightings')
-        .update({ category, description: description.trim() || null, image_url })
-        .eq('id', sighting.id)
-        .select();
-      if (updateError) throw new Error(updateError.message);
-      if (!data || data.length === 0) {
-        throw new Error('Update was blocked by the database. Run this in the Supabase SQL editor:\n\ncreate policy "Public update" on public.graffiti_sightings for update using (true) with check (true);');
-      }
-      onSuccess(data[0] as GraffitiSighting);
+
+      const res = await fetch('/api/admin/edit', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-admin-password': editPassword,
+        },
+        body: JSON.stringify({ id: sighting.id, category, description: description.trim() || null, image_url }),
+      });
+
+      if (res.status === 401) throw new Error('Wrong admin password');
+      if (!res.ok) throw new Error('Update failed');
+      const data = await res.json();
+      sessionStorage.setItem('admin_pw', editPassword);
+      onSuccess(data as GraffitiSighting);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -149,6 +159,17 @@ export default function EditForm({ sighting, onSuccess, onDelete, onCancel }: Pr
           Photo <span className="text-zinc-400">(optional)</span>
         </label>
         <PhotoDropzone preview={preview} onChange={handlePhotoChange} onClear={handlePhotoClear} />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-zinc-700 mb-1">Admin password</label>
+        <input
+          type="password"
+          value={editPassword}
+          onChange={(e) => setEditPassword(e.target.value)}
+          placeholder="Required to save changes"
+          className="w-full bg-white border border-zinc-200 rounded px-3 py-2 text-sm text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-500"
+        />
       </div>
 
       {error && <p className="text-red-500 text-sm bg-red-50 border border-red-100 rounded px-3 py-2">{error}</p>}

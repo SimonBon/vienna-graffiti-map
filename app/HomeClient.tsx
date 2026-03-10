@@ -67,6 +67,7 @@ function HomeInner({ initial }: Props) {
         onFilterChange={setActiveFilter}
         onEdit={setEditingSighting}
         onSelect={handleSelectSighting}
+        onImageClick={setLightboxUrl}
         onManageCategories={() => setManagingCategories(true)}
         onAdminPanel={() => setAdminOpen(true)}
         open={sidebarOpen}
