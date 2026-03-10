@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet';
 import { GraffitiSighting } from '@/types';
 import { VIENNA_CENTER, DEFAULT_ZOOM, MIN_ZOOM } from '@/lib/constants/map';
-import GraffitiMarker from './GraffitiMarker';
+import ClusterLayer from './ClusterLayer';
 import MapClickHandler from './MapClickHandler';
 import MapFlyTo from './MapFlyTo';
 
@@ -110,9 +110,7 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
         <MapClickHandler onMapClick={onMapClick} />
         <MapFlyTo target={flyTarget} />
         <FlyToLocation target={locTarget} />
-        {sightings.map((s) => (
-          <GraffitiMarker key={s.id} sighting={s} onImageClick={onImageClick} />
-        ))}
+        <ClusterLayer sightings={sightings} onImageClick={onImageClick} />
       </MapContainer>
 
       {/* Bottom-left controls — shift right on desktop when sidebar open, up on mobile when sheet open */}
