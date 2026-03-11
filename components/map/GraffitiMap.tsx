@@ -2,7 +2,7 @@
 
 import 'leaflet/dist/leaflet.css';
 import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, ZoomControl, Circle, CircleMarker, useMap } from 'react-leaflet';
 import { GraffitiSighting } from '@/types';
 import { VIENNA_CENTER, DEFAULT_ZOOM, MIN_ZOOM } from '@/lib/constants/map';
 import ClusterLayer from './ClusterLayer';
@@ -47,6 +47,8 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
   const [locTarget, setLocTarget] = useState<[number, number] | null>(null);
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [userAccuracy, setUserAccuracy] = useState<number>(0);
   const controlsRef = useRef<HTMLDivElement>(null);
 
   // Prevent touch events on the controls from leaking into Leaflet
@@ -73,11 +75,12 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
     setLocError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
+        const { latitude, longitude, accuracy } = pos.coords;
         setLocating(false);
+        setUserPos([latitude, longitude]);
+        setUserAccuracy(accuracy);
         setLocTarget([latitude, longitude]);
         setTimeout(() => setLocTarget(null), 100);
-        onMapClick(latitude, longitude);
       },
       () => {
         setLocating(false);
@@ -111,6 +114,22 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
         <MapFlyTo target={flyTarget} />
         <FlyToLocation target={locTarget} />
         <ClusterLayer sightings={sightings} onImageClick={onImageClick} />
+        {userPos && (
+          <>
+            {userAccuracy > 0 && (
+              <Circle
+                center={userPos}
+                radius={userAccuracy}
+                pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.08, weight: 1 }}
+              />
+            )}
+            <CircleMarker
+              center={userPos}
+              radius={9}
+              pathOptions={{ color: '#fff', fillColor: '#3b82f6', fillOpacity: 1, weight: 3 }}
+            />
+          </>
+        )}
       </MapContainer>
 
       {/* Bottom-left controls — shift right on desktop when sidebar open, up on mobile when sheet open */}
@@ -121,11 +140,11 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
         <button
           onClick={handleLocate}
           disabled={locating}
-          title="Pin my current location"
+          title="Zoom to my location"
           className="flex items-center gap-1.5 bg-white border border-zinc-200 shadow-md rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-60"
         >
-          <span className="text-sm">{locating ? '⏳' : '📍'}</span>
-          <span className="hidden sm:inline">{locating ? 'Locating…' : 'Pin my location'}</span>
+          <span className="text-sm">{locating ? '⏳' : '◎'}</span>
+          <span className="hidden sm:inline">{locating ? 'Locating…' : 'My location'}</span>
         </button>
 
         {/* Layer toggle */}
