@@ -69,18 +69,19 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
   const current = LAYERS[layer];
   const next: LayerKey = layer === 'map' ? 'satellite' : 'map';
 
-  function handleLocate() {
+  function geolocate(onSuccess: (lat: number, lng: number, accuracy: number) => void) {
     if (!navigator.geolocation) { setLocError('Not supported'); return; }
     setLocating(true);
     setLocError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude, accuracy } = pos.coords;
         setLocating(false);
+        const { latitude, longitude, accuracy } = pos.coords;
         setUserPos([latitude, longitude]);
         setUserAccuracy(accuracy);
         setLocTarget([latitude, longitude]);
         setTimeout(() => setLocTarget(null), 100);
+        onSuccess(latitude, longitude, accuracy);
       },
       () => {
         setLocating(false);
@@ -90,6 +91,9 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
+
+  function handleLocate() { geolocate(() => {}); }
+  function handlePinLocation() { geolocate((lat, lng) => onMapClick(lat, lng)); }
 
   return (
     <div className="relative h-full w-full">
@@ -132,19 +136,19 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
         )}
       </MapContainer>
 
-      {/* Bottom-left controls — shift right on desktop when sidebar open, up on mobile when sheet open */}
+      {/* Bottom-left controls — pin + layer toggle */}
       <div ref={controlsRef} className={`absolute z-[400] flex flex-row gap-1.5 transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'bottom-[72vh] sm:bottom-8 left-2.5 sm:left-[19rem]' : 'bottom-8 left-2.5'}
       `}>
-        {/* Use my location */}
+        {/* Pin at my location */}
         <button
-          onClick={handleLocate}
+          onClick={handlePinLocation}
           disabled={locating}
-          title="Zoom to my location"
+          title="Pin at my current location"
           className="flex items-center gap-1.5 bg-white border border-zinc-200 shadow-md rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-60"
         >
-          <span className="text-sm">{locating ? '⏳' : '◎'}</span>
-          <span className="hidden sm:inline">{locating ? 'Locating…' : 'My location'}</span>
+          <span className="text-sm">{locating ? '⏳' : '📍'}</span>
+          <span className="hidden sm:inline">{locating ? 'Locating…' : 'Pin my location'}</span>
         </button>
 
         {/* Layer toggle */}
@@ -157,6 +161,16 @@ export default function GraffitiMap({ sightings, onMapClick, onImageClick, flyTa
           <span className="hidden sm:inline">{layer === 'map' ? 'Satellite' : 'Map'}</span>
         </button>
       </div>
+
+      {/* Locate button — above the zoom control, bottom-right */}
+      <button
+        onClick={handleLocate}
+        disabled={locating}
+        title="Zoom to my location"
+        className="absolute z-[400] bottom-[6.5rem] right-[0.625rem] w-[34px] h-[34px] flex items-center justify-center bg-white border border-zinc-200 shadow-md rounded text-base text-zinc-600 hover:bg-zinc-50 transition-colors disabled:opacity-60"
+      >
+        {locating ? '⏳' : '◎'}
+      </button>
 
       {/* Location error toast */}
       {locError && (
