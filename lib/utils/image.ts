@@ -1,5 +1,5 @@
-const MAX_DIMENSION = 1200;
-const WEBP_QUALITY = 0.82;
+const MAX_DIMENSION = 800;
+const WEBP_QUALITY = 0.65;
 
 export async function resizeImageToWebP(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
